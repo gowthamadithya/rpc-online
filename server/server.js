@@ -15,6 +15,12 @@ app.use(express.json());
 const sequelize = new Sequelize(process.env.PG_DATABASE_URL, {
   dialect: 'postgres',
   logging: false,
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false,
+    },
+  }
 });
 
 // Game Model

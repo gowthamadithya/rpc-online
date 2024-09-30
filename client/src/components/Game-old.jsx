@@ -1,64 +1,30 @@
-import React, { useState, useReducer } from "react";
+import React, { useState } from "react";
 import { saveGame } from "../api/api";
-const initialState =  {
-        player1: { name: '', choice: '', score: 0 },
-        player2: { name: '', choice: '', score: 0 },
-        round: 0,
-        gameOver: false,
-        winner: ''
-    }
-function rpcReducer(playerData, action) {
-  switch (action.type) {
-    case 'setInput': {
-        const {playerKey, field, value} = action.payload
-      return {
-            ...playerData,
-            [playerKey]: {
-                ...playerData[playerKey],
-                [field]: value,
-            },
-        }
-    }
-    case 'roundIncrement': {
-      return {
-          ...playerData, round : (playerData.round  || 0) + 1
-      };
-    }
-    case 'setWinner': {
-        const {gameVeridict} = action.payload
-      return {
-          ...playerData, winner : gameVeridict
-      };
-    }
-    case 'setGameOver': {
-      return {
-          ...playerData, gameOver: true
-      }
-    }
-    case 'reset': {
-      return initialState
-    }
-    default: {
-      throw Error('Unknown action: ' + action.type);
-    }
-  }
-}
 
 export default function Game() {
     const options = ['rock', 'paper', 'scissors'];
-
-    const [playerData, dispatch] = useReducer(rpcReducer, initialState)
-
-    console.log(playerData)
+    const [playerData, setPlayerData] = useState({
+        player1: { name: '', choice: '', score: 0 },
+        player2: { name: '', choice: '', score: 0 },
+    });
+    const [round, setRound] = useState(0);
+    const [gameOver, setGameOver] = useState(false);
+    const [winner, setWinner] = useState('');
 
     const handleInputChange = (playerKey, field, value) => {
-        dispatch({type: 'setInput', payload: {playerKey, field, value}});
+        setPlayerData(prevState => ({
+            ...prevState,
+            [playerKey]: {
+                ...prevState[playerKey],
+                [field]: value,
+            },
+        }));
     };
 
     const nextRound = () => {
-        if (playerData.round >= 5) {
+        if (round >= 5) {
+            setGameOver(true);
             checkWinner();
-            dispatch({type: 'setGameOver'})
             return;
         }
 
@@ -75,29 +41,19 @@ export default function Game() {
             (player1.choice === 'paper' && player2.choice === 'rock') ||
             (player1.choice === 'scissors' && player2.choice === 'paper')
         ) {
-            dispatch({type: 'setInput', payload: {
-                playerKey: 'player1', field: 'score', value: player1.score + 1
-            }});
-
+            player1.score += 1;
         } else {
-            dispatch({type: 'setInput', payload: {
-                playerKey: 'player2', field: 'score', value: player2.score + 1
-            }});
+            player2.score += 1;
         }
 
-         dispatch({type: 'setInput', payload: {
-                playerKey: 'player1', field: 'choice', value: ''
-            }});
+        setPlayerData(prevState => ({
+            ...prevState,
+            player1: { ...prevState.player1, choice: '' },
+            player2: { ...prevState.player2, choice: '' },
+        }));
 
-        dispatch({type: 'setInput', payload: {
-                playerKey: 'player2', field: 'choice', value: ''
-            }});
-
-
-
-        dispatch({type: 'roundIncrement'})
-    }
-
+        setRound(prevRound => prevRound + 1);
+    };
 
     const checkWinner = () => {
         const { player1, player2 } = playerData;
@@ -110,8 +66,7 @@ export default function Game() {
             gameVeridict = "Tie";
         }
 
-        dispatch({type: 'setWinner', payload: {gameVeridict}})
-        
+        setWinner(gameVeridict)
 
         // Send game data to the server
         const gameDataPayload = {
@@ -133,7 +88,7 @@ export default function Game() {
         //     },
         //     winner: gameVeridict,
         // };
-        
+
         saveGame(gameDataPayload)
             .then(response => {
                 console.log('Game saved successfully:', response);
@@ -141,24 +96,19 @@ export default function Game() {
             .catch(error => {
                 console.error('Error saving game:', error);
             });
-
-
     };
     
 
-    if (playerData.gameOver) {
+    if (gameOver) {
         return (
-        <div>
-            <h1>{playerData.winner}</h1>
-            <button onClick={() => dispatch({ type: 'reset' })}>Play Again</button>
-        </div>
+            <h1>{winner}</h1>
         );
     }
 
     return (
         <div>
-            <h1>Current round no: {playerData.round + 1}</h1>
-            {Object.keys(playerData).filter(item => item.includes('player')).map((playerKey) => (
+            <h1>Current round no: {round + 1}</h1>
+            {Object.keys(playerData).map((playerKey) => (
                 <div key={playerKey}>
                     <h4>{playerData[playerKey].name || playerKey}</h4>
                     <input
@@ -180,7 +130,7 @@ export default function Game() {
                     <p>Score: {playerData[playerKey].score}</p>
                 </div>
             ))}
-            {playerData['player1'].choice && playerData['player2'].choice && !playerData.gameOver ? (
+            {playerData['player1'].choice && playerData['player2'].choice && !gameOver ? (
                 <button onClick={nextRound}>Next Round</button>
             ) : null}
         </div>

@@ -6,6 +6,7 @@ function History() {
 
   useEffect(() => {
     getHistory().then(setHistory);
+    console.log(history)
   }, []);
 
   return (
@@ -14,10 +15,10 @@ function History() {
       <ul>
         {history.map((game, index) => (
           <li key={index}>
-            {game.players.player1} vs {game.players.player2} - 
+            {game.player1} vs {game.player2} - 
             Game Veridict: {game.winner} (
-            {game.players.player1}: {game.scores.player1}, 
-            {game.players.player2}: {game.scores.player2})
+            {game.player1}: {game.score1}, 
+            {game.player2}: {game.score2})
           </li>
         ))}
       </ul>

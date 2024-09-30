@@ -70,16 +70,24 @@ export default function Game() {
 
         // Send game data to the server
         const gameDataPayload = {
-            players: {
-                player1: player1.name,
-                player2: player2.name,
-            },
-            scores: {
-                player1: player1.score,
-                player2: player2.score,
-            },
-            winner: gameVeridict,
-        };
+            player1: player1.name,
+            player2: player2.name,
+            score1: player1.score,
+            score2: player2.score,
+            winner: gameVeridict
+        }
+        // for mongo schema
+        // const gameDataPayload = {
+        //     players: {
+        //         player1: player1.name,
+        //         player2: player2.name,
+        //     },
+        //     scores: {
+        //         player1: player1.score,
+        //         player2: player2.score,
+        //     },
+        //     winner: gameVeridict,
+        // };
 
         saveGame(gameDataPayload)
             .then(response => {

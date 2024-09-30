@@ -1,9 +1,9 @@
 const express = require('express');
-const mongoose = require('mongoose');
+const { Sequelize, DataTypes } = require('sequelize');
 const cors = require('cors');
 require('dotenv').config();
 
-//new express instance
+// New express instance
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -11,36 +11,52 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('MongoDB connected successfully'))
-.catch(err => console.error('MongoDB connection error:', err));
-
-// Game Schema
-const GameSchema = new mongoose.Schema({
-  players: {
-    player1: { type: String, required: true },
-    player2: { type: String, required: true },
-  },
-  scores: {
-    player1: { type: Number, default: 0 },
-    player2: { type: Number, default: 0 },
-  },
-  winner: { type: String, default: null },
-  date: { type: Date, default: Date.now },
+// PostgreSQL Connection
+const sequelize = new Sequelize(process.env.PG_DATABASE_URL, {
+  dialect: 'postgres',
+  logging: false,
 });
 
 // Game Model
-const Game = mongoose.model('Game', GameSchema);
+const Game = sequelize.define('Game', {
+  player1: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  player2: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  score1: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  score2: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  winner: {
+    type: DataTypes.STRING,
+    defaultValue: null,
+  },
+  date: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
+  },
+}, {
+  tableName: 'Games' // specify the table name explicitly
+});
+
+
+// Sync database
+sequelize.sync()
+  .then(() => console.log('PostgreSQL connected successfully'))
+  .catch(err => console.error('PostgreSQL connection error:', err));
 
 // Routes
 app.post('/api/games', async (req, res) => {
   try {
-    const game = new Game(req.body);
-    await game.save();
+    const game = await Game.create(req.body);
     res.status(201).json(game);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -50,7 +66,7 @@ app.post('/api/games', async (req, res) => {
 app.get('/api/games', async (req, res) => {
   console.log('GET /api/games called');
   try {
-    const games = await Game.find().sort({ date: -1 });
+    const games = await Game.findAll({ order: [['date', 'DESC']] });
     res.json(games);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -61,6 +77,3 @@ app.get('/api/games', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-
-
-

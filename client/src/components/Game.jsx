@@ -49,7 +49,7 @@ export default function Game() {
 
     const [playerData, dispatch] = useReducer(rpcReducer, initialState)
 
-    console.log(playerData)
+    // console.log(playerData)
 
     const handleInputChange = (playerKey, field, value) => {
         dispatch({type: 'setInput', payload: {playerKey, field, value}});

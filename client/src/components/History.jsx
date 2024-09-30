@@ -6,7 +6,7 @@ function History() {
 
   useEffect(() => {
     getHistory().then(setHistory);
-    console.log(history)
+    // console.log(history)
   }, []);
 
   return (
